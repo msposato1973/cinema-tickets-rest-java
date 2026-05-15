@@ -433,6 +433,29 @@ class CinemaTicketsServiceImplTest {
 			verify(seatReservationService, times(1)).reserveSeats(anyLong(), anyLong());
 		}
 
+		@Test
+		@DisplayName("TC61: Complete flow should handle maximum ticket purchase correctly")
+		void shouldHandleMaximumTicketPurchaseCorrectly() throws InvalidBookingException {
+			TicketRequest[] requests = { new TicketRequest(TicketType.ADULT, 20), new TicketRequest(TicketType.CHILD, 5) };
+
+			BigDecimal amount = new BigDecimal((20 * 25) + (5 * 15)); // (20 * £25) + (5 * £15) = £500 + £75 = £575
+			Long accountId = 1L;
+
+			when(paymentService.debitAccount(eq(accountId), eq(amount)))
+					.thenReturn(ResponseEntity.ok("Payment successful"));
+			when(seatReservationService.reserveSeats(eq(accountId), eq(25L)))
+					.thenReturn(ResponseEntity.ok("Seats reserved"));
+
+			String result = cinemaTicketsService.purchaseTickets(1L, requests);
+
+			verify(paymentService).debitAccount(eq(1L), eq(amount));
+			verify(seatReservationService).reserveSeats(eq(1L), eq(25L));
+
+			assertTrue(result.contains("Successfully purchased 25 tickets"));
+			assertTrue(result.contains("Total amount: £575"));
+			assertTrue(result.contains("Seats reserved: 25"));
+		}
+
 	}
 
 	// ==================== PARAMETERIZED TESTS FOR EDGE CASES ====================
