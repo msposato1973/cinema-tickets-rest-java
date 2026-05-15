@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: Copyright (c) Crown Copyright 2026 (Department for Work and Pensions)
+# SPDX-License-Identifier: MIT
+
+$schema: https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
+
+version: "0.2"
+
+name: cinema-tickets-rest-java
+
+failFast: true
+noConfigSearch: true
+readonly: true
+useGitignore: true
+
+language: en-GB
+
+languageSettings:
+  - languageId: "*"
+    allowCompoundWords: false
+
+dictionaries:
+  - project-words
+
+dictionaryDefinitions:
+  - name: project-words
+    path: ./.cspell/project-words.txt
+    addWords: true
