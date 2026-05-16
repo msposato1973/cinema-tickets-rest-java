@@ -135,7 +135,7 @@ Why Fail-Fast?
 
 The `TicketSummary` DTO (Data Transfer Object) encapsulates all calculated values:
 
-```java
+``` 
 public record TicketSummary(
     int totalTickets,    // Total tickets including INFANTS (for limit checking)
     int adultCount,      // Number of adult tickets
@@ -144,11 +144,11 @@ public record TicketSummary(
     int totalAmount,     // Total payment amount (infants excluded)
     int totalSeats       // Total seats needed (adults + children only)
 ) {}
-
+``` 
 ## 4. Business Rule Implementation Approach
 
 Each business rule is implemented as a separate validation check:
-
+```
 Business Rule	        	Implementation	                                   		 	Location
 Maximum 25 tickets	    	summary.totalTickets() > MAX_TICKETS_PER_REQUEST		 	validateBusinessRules()
 Minimum 1 ticket	    	summary.totalTickets() == 0	                        	 	validateBusinessRules()
@@ -156,6 +156,7 @@ No negative quantities		request.ticketCount() < 0	                        		vali
 Children need adult	    	childCount > 0 && adultCount == 0	                		validateBusinessRules()
 Infants need adult	    	infantCount > 0 && adultCount == 0	                		validateBusinessRules()
 Infants ≤ adults	    	infantCount > adultCount	                        		validateBusinessRules()
+```
 
 ### 5. Calculation Logic
 The calculation follows these principles:
@@ -202,6 +203,7 @@ The calculation follows these principles:
 - Asynchronous Processing: For high load scenarios, consider making payment and seat reservation asynchronous with callbacks or messaging.
 
 ### 10. Project Structure - Organization
+```
 CinemaTicketsServiceImplTest
 ├── PurchaseTicketsSuccessTests (TC01-TC07)
 │   ├── Adult only
@@ -220,9 +222,35 @@ CinemaTicketsServiceImplTest
 ├── ValidateBusinessRulesTests (TC29-TC39)
 ├── CalculateTicketSummaryTests (TC40-TC48)
 └── IntegrationTests (TC49-TC51)
-`
+```
 
-### 11. Ticket Summary Design Pattern
+### 11. Installation Steps
+# 1. Clone the repository
+git clone https://github.com/msposato1973/cinema-tickets-rest-java.git
+cd cinema-tickets-service
+
+# 2. Build the project
+mvn clean install        # Using Maven
+# OR
+gradle clean build       # Using Gradle
+
+# 3. Run unit tests
+mvn test                 # Using Maven
+# OR
+gradle test              # Using Gradle
+
+Running Specific Tests
+# Run all tests
+mvn test
+
+# Run specific test class
+mvn test -Dtest=CinemaTicketsServiceImplTest
+
+# Run specific test method
+mvn test -Dtest=CinemaTicketsServiceImplTest#shouldSuccessfullyPurchaseAdultsChildrenAndInfants
+
+
+### 11a. Ticket Summary Design Pattern
 how  tu execute 
 1. Ensure you have Java 21 or higher installed.
 2. Clone the repository to your local machine.
@@ -257,3 +285,16 @@ mvn test
 # Run specific test class
 mvn test -Dtest=CinemaTicketsServiceImplTest
 
+Test Execution Report
+--------------------------------------------------------
+T E S T S
+--------------------------------------------------------
+Running uk.gov.dwp.engineering.recruitment.CinemaTicketsServiceImplTest
+Tests run: 66, Failures: 0, Errors: 0, Skipped: 0
+
+Results:
+
+Tests run: 66, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] BUILD SUCCESS
+[INFO] Total time: 4.527 s
