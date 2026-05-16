@@ -30,6 +30,7 @@ This is a production-ready implementation of the `CinemaTicketsService` interfac
 - [Performance Considerations](#performance-considerations)
 - [Potential Improvements](#potential-improvements)
 - [Project Structure](#project-structure)
+- [Code Coverage](#Code-Coverage)
 
 ## Assumptions
 Assumptions made during implementation:
@@ -144,7 +145,7 @@ public record TicketSummary(
     int totalSeats       // Total seats needed (adults + children only)
 ) {}
 
-### 4. Business Rule Implementation Approach
+## 4. Business Rule Implementation Approach
 
 Each business rule is implemented as a separate validation check:
 
@@ -219,3 +220,40 @@ CinemaTicketsServiceImplTest
 ├── ValidateBusinessRulesTests (TC29-TC39)
 ├── CalculateTicketSummaryTests (TC40-TC48)
 └── IntegrationTests (TC49-TC51)
+`
+
+### 11. Ticket Summary Design Pattern
+how  tu execute 
+1. Ensure you have Java 21 or higher installed.
+2. Clone the repository to your local machine.
+3. Navigate to the project directory in your terminal.
+4. Build the project using Maven or Gradle:
+   - For Maven: `mvn clean install`
+   - For Gradle: `gradle build`
+5. Run the unit tests to verify functionality:
+   - For Maven: `mvn test`
+   - For Gradle: `gradle test`
+`
+
+### 12. Code-Coverage 
+Using IntelliJ IDEA
+Right-click on test class
+
+Run with Coverage
+View coverage report in Coverage tool window
+
+Using Eclipse with EclEmma
+Right-click on project
+
+Coverage As → JUnit Test
+View coverage highlighting in editor
+
+htmlReport\index.html
+
+
+# Run all tests
+mvn test
+
+# Run specific test class
+mvn test -Dtest=CinemaTicketsServiceImplTest
+

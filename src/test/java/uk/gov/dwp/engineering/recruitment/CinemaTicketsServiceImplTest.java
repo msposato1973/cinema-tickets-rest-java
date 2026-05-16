@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.InjectMocks;
+ 
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +31,9 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.when;
 
 class CinemaTicketsServiceImplTest {
-
+	
+	
+	
 	@Mock
 	private PaymentService paymentService;
 
@@ -53,35 +55,27 @@ class CinemaTicketsServiceImplTest {
 		assertNotNull(cinemaTicketsService);
 	}
 
-	@Test
-	void shouldThrowExceptionWhenAccountIdIsNull() {
-
-		InvalidBookingException exception = assertThrows(InvalidBookingException.class, () -> {
-
-			cinemaTicketsService.purchaseTickets(null, new TicketRequest[] {});
-		});
-
-		assertEquals("Invalid account ID: null. Account ID must be greater than 0.", exception.getMessage());
+	@ParameterizedTest
+	@DisplayName("Should throw exception when account ID is invalid")
+	@MethodSource("provideInvalidAccountIds")
+	void shouldThrowExceptionWhenAccountIdIsInvalid(Long accountId, String expectedMessage) {
+	    InvalidBookingException exception = assertThrows(InvalidBookingException.class, () -> {
+	        cinemaTicketsService.purchaseTickets(accountId, new TicketRequest[] {});
+	    });
+	    
+	    assertEquals(expectedMessage, exception.getMessage());
+	    verifyNoInteractions(paymentService);
+	    verifyNoInteractions(seatReservationService);
 	}
 
-	@Test
-	void shouldThrowExceptionWhenAccountIdIsZero() {
-
-		InvalidBookingException exception = assertThrows(InvalidBookingException.class, () -> {
-			cinemaTicketsService.purchaseTickets(0L, new TicketRequest[] {});
-		});
-
-		assertEquals("Invalid account ID: 0. Account ID must be greater than 0.", exception.getMessage());
-	}
-
-	@Test
-	void shouldThrowExceptionWhenAccountIdIsNegative() {
-		InvalidBookingException exception = assertThrows(InvalidBookingException.class, () -> {
-
-			cinemaTicketsService.purchaseTickets(-1L, new TicketRequest[] {});
-		});
-
-		assertEquals("Invalid account ID: -1. Account ID must be greater than 0.", exception.getMessage());
+	private static Stream<Arguments> provideInvalidAccountIds() {
+	    return Stream.of(
+	        Arguments.of(0L, "Invalid account ID: 0. Account ID must be greater than 0."),
+	        Arguments.of(-1L, "Invalid account ID: -1. Account ID must be greater than 0."),
+	        Arguments.of(-5L, "Invalid account ID: -5. Account ID must be greater than 0."),
+	        Arguments.of(-100L, "Invalid account ID: -100. Account ID must be greater than 0."),
+	        Arguments.of(null, "Invalid account ID: null. Account ID must be greater than 0.")
+	    );
 	}
 
 	@Test
@@ -91,6 +85,7 @@ class CinemaTicketsServiceImplTest {
 				new TicketRequest(TicketType.INFANT, 2) };
 
 		String result = cinemaTicketsService.purchaseTickets(100L, requests);
+		assertTrue(result.contains("Successfully purchased 7 tickets. Total amount: £105. Seats reserved: 5. Account ID: 100"));
 
 		verify(paymentService).debitAccount(eq(100L), eq(new BigDecimal("105")));
 		verify(seatReservationService).reserveSeats(eq(100L), eq(5L));
@@ -104,10 +99,8 @@ class CinemaTicketsServiceImplTest {
 
 		String result = cinemaTicketsService.purchaseTickets(1L, requests);
 		BigDecimal amount = new BigDecimal("65");
-		// Verify: 2 Adults = £50, 1 Child = £15, Infant = £0 => Total £65
+		
 		verify(paymentService).debitAccount(1L, amount);
-
-		// Verify: 2 Adults + 1 Child = 3 seats
 		verify(seatReservationService).reserveSeats(1L, 3L);
 
 		assertTrue(result.contains("Successfully purchased 4 tickets"));
@@ -123,8 +116,8 @@ class CinemaTicketsServiceImplTest {
 		InvalidBookingException exception = assertThrows(InvalidBookingException.class, () -> {
 			cinemaTicketsService.purchaseTickets(1L, requests);
 		});
-
-		assertTrue(exception.getMessage().contains("Total ticket count exceeds the maximum allowed"));
+		
+		assertTrue(exception.getMessage().contains("Cannot purchase more than 25 tickets. Requested: 26"));
 		verify(paymentService, never()).debitAccount(anyLong(), any(BigDecimal.class));
 		verify(seatReservationService, never()).reserveSeats(anyLong(), anyLong());
 
@@ -216,14 +209,13 @@ class CinemaTicketsServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("Should successfully purchase exactly 25 tickets")
 	void shouldPurchaseExactlyMaxTickets() throws InvalidBookingException {
 		TicketRequest[] requests = { new TicketRequest(TicketType.ADULT, 20), new TicketRequest(TicketType.CHILD, 5) };
 
 		String result = cinemaTicketsService.purchaseTickets(1L, requests);
-		BigDecimal amount = new BigDecimal((20 * 25) + (5 * 15)); // (20 * £25) + (5 * £15) = £500 + £75 = £575
+		BigDecimal amount = new BigDecimal((20 * 25) + (5 * 15)); 
 
-		// Verify payment and seat reservation interactions
+		
 		verify(paymentService).debitAccount(1L, amount);
 		verify(seatReservationService).reserveSeats(1L, 25L);
 
@@ -263,17 +255,15 @@ class CinemaTicketsServiceImplTest {
 				new TicketRequest(TicketType.INFANT, 3) };
 
 		String result = cinemaTicketsService.purchaseTickets(100L, requests);
-
 		verify(seatReservationService).reserveSeats(100L, 15L);
-
 		verify(paymentService).debitAccount(100L, new BigDecimal(325));
-
 		assertTrue(result.contains("Successfully purchased 18 tickets"));
 	}
 
 	// ==================== TESTS FOR PRIVATE METHOD calculateTicketSummary
 	// ====================
 	@Test
+	@DisplayName("Private Method: calculateTicketSummary - Should calculate correct summary for mixed ticket types")
 	void testCalculateTicketSummary()
 			throws InvocationTargetException, IllegalAccessException, NoSuchMethodException, SecurityException {
 		TicketRequest[] ticketRequests = { new TicketRequest(TicketType.ADULT, 2),
@@ -289,12 +279,13 @@ class CinemaTicketsServiceImplTest {
 		assertEquals(2, summary.adultCount());
 		assertEquals(1, summary.childCount());
 		assertEquals(1, summary.infantCount());
-		assertEquals(65, summary.totalAmount()); // 2 adults * $25 + 1 child * $15 + 1 infant * $0
-		assertEquals(3, summary.totalSeats()); // 2 adults + 1 child (infant does not require a seat)
+		assertEquals(65, summary.totalAmount());  
+		assertEquals(3, summary.totalSeats());  
 	}
 
 	// ==================== INTEGRATION TESTS ====================
 	@Test
+	@DisplayName("Private Method: calculateTicketSummary - 2 adults + 1 child")
 	void shouldProcessValidTicketPurchase() {
 		TicketRequest[] ticketRequests = { new TicketRequest(TicketType.ADULT, 2),
 				new TicketRequest(TicketType.CHILD, 1) };
@@ -303,16 +294,16 @@ class CinemaTicketsServiceImplTest {
 		BigDecimal amount = new BigDecimal("65");
 
 		Long accountId = 1L;
-		Long seatCount = 3L; // 2 adults + 1 child
+		Long seatCount = 3L;  
 
 		when(paymentService.debitAccount(eq(accountId), eq(amount)))
 				.thenReturn(ResponseEntity.ok("Payment successful"));
-		when(seatReservationService.reserveSeats(eq(accountId), eq(5L)))
+		when(seatReservationService.reserveSeats(eq(accountId), eq(seatCount)))
 				.thenReturn(ResponseEntity.ok("Seats reserved"));
 
 		// Verify payment and seat reservation interactions
 		verify(paymentService, times(1)).debitAccount(eq(1L), eq(amount));
-		verify(seatReservationService).reserveSeats(eq(1L), eq(3L));
+		verify(seatReservationService).reserveSeats(eq(accountId), eq(seatCount));
 	}
 
 	@Nested
@@ -329,7 +320,7 @@ class CinemaTicketsServiceImplTest {
 		}
 
 		@Test
-		@DisplayName("TC48: Should calculate correctly for adult tickets only")
+		@DisplayName("TC55: Should calculate correctly for adult tickets only")
 		void shouldCalculateCorrectlyForAdultsOnly() throws Exception {
 			TicketRequest[] requests = { new TicketRequest(TicketType.ADULT, 3) };
 
@@ -346,7 +337,7 @@ class CinemaTicketsServiceImplTest {
 		}
 
 		@Test
-		@DisplayName("TC49: Should calculate correctly for children tickets only")
+		@DisplayName("TC56: Should calculate correctly for children tickets only")
 		void shouldCalculateCorrectlyForChildrenOnly() throws Exception {
 			TicketRequest[] requests = { new TicketRequest(TicketType.CHILD, 4) };
 
@@ -438,7 +429,7 @@ class CinemaTicketsServiceImplTest {
 		void shouldHandleMaximumTicketPurchaseCorrectly() throws InvalidBookingException {
 			TicketRequest[] requests = { new TicketRequest(TicketType.ADULT, 20), new TicketRequest(TicketType.CHILD, 5) };
 
-			BigDecimal amount = new BigDecimal((20 * 25) + (5 * 15)); // (20 * £25) + (5 * £15) = £500 + £75 = £575
+			BigDecimal amount = new BigDecimal((20 * 25) + (5 * 15));
 			Long accountId = 1L;
 
 			when(paymentService.debitAccount(eq(accountId), eq(amount)))
@@ -455,6 +446,70 @@ class CinemaTicketsServiceImplTest {
 			assertTrue(result.contains("Total amount: £575"));
 			assertTrue(result.contains("Seats reserved: 25"));
 		}
+
+		@Test
+		@DisplayName("TC61a: Should throw exception when exceeding max tickets with adults only")
+		void shouldThrowExceptionWhenExceedingMaxTicketsWithAdults() {
+			String expectedMessage = "Cannot purchase more than 25 tickets. Requested: 26";
+			TicketRequest[] requests = {
+					new TicketRequest(TicketType.ADULT, 26)  // 26 > 25
+			};
+
+			InvalidBookingException exception = assertThrows(InvalidBookingException.class, () -> {
+				cinemaTicketsService.purchaseTickets(1L, requests);
+			});
+
+			 
+			 assertTrue(exception.getMessage().contains(expectedMessage));
+
+			 verifyNoInteractions(paymentService);
+			 verifyNoInteractions(seatReservationService);
+		}
+		
+		@Test
+		@DisplayName("TC61b: Should throw exception when exceeding max tickets with mixed types")
+		void shouldThrowExceptionWhenExceedingMaxTicketsWithMixedTypes() {
+			String expectedMessage = "Cannot purchase more than 25 tickets. Requested: 30";
+		    TicketRequest[] requests = { 
+		        new TicketRequest(TicketType.ADULT, 15), 
+		        new TicketRequest(TicketType.CHILD, 10),
+		        new TicketRequest(TicketType.INFANT, 5)   // 15+10+5 = 30 > 25
+		    };
+		    
+		    InvalidBookingException exception = assertThrows(InvalidBookingException.class, () -> {
+		        cinemaTicketsService.purchaseTickets(1L, requests);
+		    });
+		    
+		   
+		    assertTrue(exception.getMessage().contains(expectedMessage));
+		    assertTrue(exception.getMessage().contains("25"));
+		}
+		
+		@Test
+		@DisplayName("TC61c: Should successfully purchase exactly 25 tickets")
+		void shouldSuccessfullyPurchaseExactlyTwentyFiveTickets() throws InvalidBookingException {
+		    TicketRequest[] requests = { 
+		        new TicketRequest(TicketType.ADULT, 20), 
+		        new TicketRequest(TicketType.CHILD, 5)   // 20+5 = 25 tickets
+		    };
+		    
+		    BigDecimal amount = new BigDecimal(575);
+			Long accountId = 1L;
+		    
+		    when(paymentService.debitAccount(eq(accountId), eq(amount)))
+			.thenReturn(ResponseEntity.ok("Payment successful"));
+			when(seatReservationService.reserveSeats(eq(accountId), eq(25L)))
+			.thenReturn(ResponseEntity.ok("Seats reserved"));
+			
+		    String result = cinemaTicketsService.purchaseTickets(1L, requests);
+		    
+		    verify(paymentService).debitAccount(eq(1L), eq(amount));  
+		    verify(seatReservationService).reserveSeats(eq(1L), eq(25L));
+		    assertNotNull(result);
+		    assertTrue(result.contains("Successfully purchased 25 tickets"));
+		}
+		
+		
 
 	}
 

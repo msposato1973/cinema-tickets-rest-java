@@ -1,0 +1,271 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > CinemaTicketsServiceImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">uk.gov.dwp.engineering.recruitment</a>
+</div>
+
+<h1>Coverage Summary for Class: CinemaTicketsServiceImpl (uk.gov.dwp.engineering.recruitment)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CinemaTicketsServiceImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (7/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (35/35)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    98,2%
+  </span>
+  <span class="absValue">
+    (54/55)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package uk.gov.dwp.engineering.recruitment;
+&nbsp;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import uk.gov.dwp.engineering.recruitment.domain.TicketRequest;
+&nbsp;
+&nbsp;import uk.gov.dwp.engineering.recruitment.dto.TicketSummary;
+&nbsp;import uk.gov.dwp.engineering.recruitment.exception.InvalidBookingException;
+&nbsp;import uk.gov.dwp.engineering.recruitment.thirdparty.PaymentService;
+&nbsp;import uk.gov.dwp.engineering.recruitment.thirdparty.SeatReservationService;
+&nbsp;
+&nbsp;import uk.gov.dwp.engineering.recruitment.utils.Constant;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;
+&nbsp;@Service
+<b class="fc">&nbsp;public class CinemaTicketsServiceImpl implements CinemaTicketsService {</b>
+&nbsp;
+&nbsp;    private final PaymentService paymentService;
+&nbsp;    private final SeatReservationService seatReservationService;
+&nbsp;
+<b class="fc">&nbsp;    public CinemaTicketsServiceImpl(PaymentService paymentService,</b>
+&nbsp;                                    SeatReservationService seatReservationService
+&nbsp;    ) {
+<b class="fc">&nbsp;        this.paymentService = paymentService;</b>
+<b class="fc">&nbsp;        this.seatReservationService = seatReservationService;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String purchaseTickets(Long accountId, TicketRequest... ticketRequests) throws InvalidBookingException {
+&nbsp;
+&nbsp;        // Validate account ID
+<b class="fc">&nbsp;        validateAccountId(accountId);</b>
+&nbsp;
+&nbsp;        // Validate ticket requests
+<b class="fc">&nbsp;        validateTicketRequests(ticketRequests);</b>
+&nbsp;
+&nbsp;        // Calculate totals
+<b class="fc">&nbsp;        TicketSummary summary = calculateTicketSummary(ticketRequests);</b>
+&nbsp;
+&nbsp;        // Check total ticket limit (including infants)
+&nbsp;        //if (summary.totalTickets() &gt; Constant.MAX_TICKETS_PER_REQUEST) {
+&nbsp;        //    throw new InvalidBookingException(Constant.MAX_TICKETS_ERROR + Constant.MAX_TICKETS_PER_REQUEST);
+&nbsp;        //}
+&nbsp;
+&nbsp;        // Validate business rules
+<b class="fc">&nbsp;        validateBusinessRules(summary);</b>
+&nbsp;
+<b class="fc">&nbsp;        BigDecimal totalAmount = new BigDecimal(summary.totalAmount());</b>
+<b class="fc">&nbsp;        paymentService.debitAccount(accountId, totalAmount);</b>
+&nbsp;
+<b class="fc">&nbsp;        Long seatCount = Long.valueOf(summary.totalSeats());</b>
+&nbsp;
+<b class="fc">&nbsp;        seatReservationService.reserveSeats(accountId, seatCount);</b>
+&nbsp;
+&nbsp;        // Return success message
+<b class="fc">&nbsp;        return String.format(Constant.MESSAGE_FORMATTING,</b>
+<b class="fc">&nbsp;                summary.totalTickets(), summary.totalAmount(), summary.totalSeats(), accountId);</b>
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    private void validateBusinessRules(TicketSummary summary) {
+&nbsp;
+&nbsp;        // Rule: Minimum one ticket
+<b class="fc">&nbsp;        if (summary.totalTickets() == 0) throw new InvalidBookingException(Constant.MESSEGE_MINTICKET_ERR);</b>
+&nbsp;
+&nbsp;        // Rule: Maximum 25 tickets
+<b class="fc">&nbsp;        if (summary.totalTickets() &gt; Constant.MAX_TICKETS_PER_REQUEST)</b>
+<b class="fc">&nbsp;            throw new InvalidBookingException(&quot;Cannot purchase more than &quot; + Constant.MAX_TICKETS_PER_REQUEST +</b>
+<b class="fc">&nbsp;                    &quot; tickets. Requested: &quot; + summary.totalTickets()</b>
+&nbsp;            );
+&nbsp;
+&nbsp;        // Rule: Child tickets require at least one Adult ticket
+<b class="fc">&nbsp;        if (summary.childCount() &gt; 0 &amp;&amp; summary.adultCount() == 0)</b>
+<b class="fc">&nbsp;            throw new InvalidBookingException(Constant.MSG_CHILD_WITHOUT_ADULT_ERR);</b>
+&nbsp;
+&nbsp;        // Rule: Infant tickets require at least one Adult ticket
+<b class="fc">&nbsp;        if (summary.infantCount() &gt; 0 &amp;&amp; summary.adultCount() == 0)</b>
+<b class="fc">&nbsp;            throw new InvalidBookingException(Constant.MSG_INFANT_WITHOUT_ADULT_ERR);</b>
+&nbsp;
+&nbsp;        // Rule: Infants cannot exceed number of adults (each infant needs an adult lap)
+<b class="fc">&nbsp;        if (summary.infantCount() &gt; summary.adultCount()) {</b>
+<b class="fc">&nbsp;            throw new InvalidBookingException(&quot;Number of infants (&quot; + summary.infantCount() +</b>
+<b class="fc">&nbsp;                    &quot;) cannot exceed number of adults (&quot; + summary.adultCount() +</b>
+&nbsp;                    &quot;). Each infant requires an adult lap.&quot;);
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    private void validateAccountId(final Long accountId) throws InvalidBookingException {
+<b class="fc">&nbsp;        if (accountId == null || accountId &lt;= 0) {</b>
+<b class="fc">&nbsp;            throw new InvalidBookingException(&quot;Invalid account ID: &quot; + accountId +</b>
+&nbsp;                    &quot;. Account ID must be greater than 0.&quot;);
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void validateTicketRequests(final TicketRequest... ticketRequests)
+&nbsp;            throws InvalidBookingException {
+&nbsp;
+<b class="fc">&nbsp;        if (ticketRequests == null || ticketRequests.length == 0) {</b>
+<b class="fc">&nbsp;            throw new InvalidBookingException(Constant.MESSEGE_TICKET_PROVIDED_ERR);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;
+<b class="fc">&nbsp;        for (TicketRequest request : ticketRequests) {</b>
+&nbsp;
+<b class="fc">&nbsp;            if (request == null) {</b>
+<b class="fc">&nbsp;                throw new InvalidBookingException(Constant.MSG_TICKET_REQUEST_ERR);</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            if (request.ticketCount() &lt; 0) {</b>
+<b class="fc">&nbsp;                throw new InvalidBookingException(&quot;Ticket count cannot be negative: &quot; + request.ticketCount());</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    private TicketSummary calculateTicketSummary(TicketRequest[] ticketRequests) {
+&nbsp;
+<b class="fc">&nbsp;        int totalTickets = 0;</b>
+<b class="fc">&nbsp;        int adultCount = 0;</b>
+<b class="fc">&nbsp;        int childCount = 0;</b>
+<b class="fc">&nbsp;        int infantCount = 0;</b>
+<b class="fc">&nbsp;        int totalAmount = 0;</b>
+<b class="fc">&nbsp;        int totalSeats = 0;</b>
+&nbsp;
+&nbsp;
+<b class="fc">&nbsp;        for (TicketRequest request : ticketRequests) {</b>
+<b class="fc">&nbsp;            int quantity = request.ticketCount();</b>
+<b class="fc">&nbsp;            totalTickets += quantity;</b>
+&nbsp;
+<b class="pc">&nbsp;            switch (request.type()) {</b>
+&nbsp;                case ADULT:
+<b class="fc">&nbsp;                    adultCount += quantity;</b>
+<b class="fc">&nbsp;                    totalAmount += quantity * Constant.ADULT_PRICE;</b>
+<b class="fc">&nbsp;                    totalSeats += quantity;</b>
+&nbsp;                    break;
+&nbsp;                case CHILD:
+<b class="fc">&nbsp;                    childCount += quantity;</b>
+<b class="fc">&nbsp;                    totalAmount += quantity * Constant.CHILD_PRICE;</b>
+<b class="fc">&nbsp;                    totalSeats += quantity;</b>
+&nbsp;                    break;
+&nbsp;                case INFANT:
+<b class="fc">&nbsp;                    infantCount += quantity;</b>
+<b class="fc">&nbsp;                    totalAmount += quantity * Constant.INFANT_PRICE;</b>
+&nbsp;                    break;
+&nbsp;                default:
+<b class="nc">&nbsp;                    throw new IllegalArgumentException(&quot;Unknown ticket type: &quot; + request.type());</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return new TicketSummary(totalTickets, adultCount, childCount, infantCount,</b>
+<b class="fc">&nbsp;                totalAmount, totalSeats);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-05-16 17:14</div>
+</div>
+</body>
+</html>

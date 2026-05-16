@@ -1,0 +1,137 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Constant</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">uk.gov.dwp.engineering.recruitment.utils</a>
+</div>
+
+<h1>Coverage Summary for Class: Constant (uk.gov.dwp.engineering.recruitment.utils)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Constant</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package uk.gov.dwp.engineering.recruitment.utils;
+&nbsp;
+<b class="nc">&nbsp;public class Constant {</b>
+&nbsp;
+&nbsp;
+&nbsp;	public static final int MAX_TICKETS_PER_REQUEST = 25;
+&nbsp;    public static final int ADULT_PRICE = 25;
+&nbsp;    public static final int CHILD_PRICE = 15;
+&nbsp;    public static final int INFANT_PRICE = 0;
+&nbsp;
+&nbsp;
+&nbsp;    public static final String MAX_TICKETS_ERROR = &quot;Total ticket count exceeds the maximum allowed: &quot;;
+&nbsp;
+&nbsp;
+&nbsp;    public static final String MESSAGE_FORMATTING = &quot;Successfully purchased %d tickets. Total amount: £%d. Seats reserved: %d. Account ID: %d&quot;;
+&nbsp;    public static final String MESSEGE_MINTICKET_ERR = &quot;Must purchase at least one ticket.&quot;;
+&nbsp;    public static final String MESSEGE_TICKET_PROVIDED_ERR = &quot;At least one ticket request must be provided.&quot;;
+&nbsp;    public static final String MSG_TICKET_REQUEST_ERR = &quot;Ticket request cannot be null.&quot;;
+&nbsp;    public static final String MSG_INFANT_WITHOUT_ADULT_ERR = &quot;Infant tickets cannot be purchased without an adult ticket&quot;;
+&nbsp;    public static final String MSG_CHILD_WITHOUT_ADULT_ERR = &quot;Child tickets cannot be purchased without an Adult ticket.&quot;;
+&nbsp;
+&nbsp;    
+&nbsp;    public static final String ACCOUNT_ID_ERROR = &quot;Invalid account ID: %s. Account ID must be greater than 0.&quot;;
+&nbsp;    public static final String TICKET_REQUEST_NULL_ERROR = &quot;TicketRequest array cannot be null.&quot;;
+&nbsp;    public static final String TICKET_REQUEST_EMPTY_ERROR = &quot;At least one TicketRequest must be provided.&quot;;
+&nbsp;    public static final String TICKET_REQUEST_ELEMENT_NULL_ERROR = &quot;TicketRequest elements cannot be null.&quot;;
+&nbsp;    public static final String TICKET_COUNT_NEGATIVE_ERROR = &quot;Ticket count cannot be negative: %d&quot;;
+&nbsp;    public static final String CHILD_WITHOUT_ADULT_ERROR = &quot;Child tickets cannot be purchased without an Adult ticket.&quot;;
+&nbsp;    public static final String INFANT_WITHOUT_ADULT_ERROR = &quot;Infant tickets cannot be purchased without an adult ticket.&quot;;
+&nbsp;    public static final String INFANT_EXCEED_ADULT_ERROR = &quot;Number of infants (%d) cannot exceed number of adults (%d). Each infant requires an adult lap.&quot;;
+&nbsp;
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-05-16 17:14</div>
+</div>
+</body>
+</html>

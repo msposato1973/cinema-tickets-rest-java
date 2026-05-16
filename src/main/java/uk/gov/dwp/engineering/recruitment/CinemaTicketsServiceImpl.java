@@ -38,9 +38,9 @@ public class CinemaTicketsServiceImpl implements CinemaTicketsService {
         TicketSummary summary = calculateTicketSummary(ticketRequests);
 
         // Check total ticket limit (including infants)
-        if (summary.totalTickets() > Constant.MAX_TICKETS_PER_REQUEST) {
-            throw new InvalidBookingException(Constant.MAX_TICKETS_ERROR + summary.totalTickets());
-        }
+        //if (summary.totalTickets() > Constant.MAX_TICKETS_PER_REQUEST) {
+        //    throw new InvalidBookingException(Constant.MAX_TICKETS_ERROR + Constant.MAX_TICKETS_PER_REQUEST);
+        //}
 
         // Validate business rules
         validateBusinessRules(summary);
